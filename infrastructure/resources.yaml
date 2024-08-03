@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation Template to create a VPC, Subnet, Security Group, Key Pair, and a t3.micro EC2 instance with SSH, HTTP, and HTTPS access.
+
+Resources:
+  # VPC
+  FrontEndEC2VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: FrontEndEC2VPC
+
+  # Subnet
+  FrontEndEC2Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref FrontEndEC2VPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: us-east-1a # Specify the desired Availability Zone here
+      Tags:
+        - Key: Name
+          Value: FrontEndEC2Subnet
+
+  # Internet Gateway
+  FrontEndEC2InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: FrontEndEC2InternetGateway
+
+  # Attach Internet Gateway to VPC
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref FrontEndEC2VPC
+      InternetGatewayId: !Ref FrontEndEC2InternetGateway
+
+  # Route Table
+  FrontEndEC2RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref FrontEndEC2VPC
+      Tags:
+        - Key: Name
+          Value: FrontEndEC2RouteTable
+
+  # Route to Internet Gateway
+  FrontEndEC2Route:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref FrontEndEC2RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref FrontEndEC2InternetGateway
+
+  # Subnet Route Table Association
+  SubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref FrontEndEC2Subnet
+      RouteTableId: !Ref FrontEndEC2RouteTable
+
+  # Security Group for EC2
+  FrontEndEC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH, HTTP, and HTTPS access
+      VpcId: !Ref FrontEndEC2VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  # EC2 Instance
+  FrontEndEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      KeyName: FrontEndEC2KeyPair
+      SecurityGroupIds:
+        - !Ref FrontEndEC2SecurityGroup
+      SubnetId: !Ref FrontEndEC2Subnet
+      ImageId: ami-0e86e20dae9224db8 # default amd64 ubuntu 24.04 LTS ami
+
+Outputs:
+  InstanceId:
+    Description: The Instance ID of the newly created EC2 instance
+    Value: !Ref FrontEndEC2Instance
+
+  PublicIP:
+    Description: Public IP address of the newly created EC2 instance
+    Value: !GetAtt FrontEndEC2Instance.PublicIp
+
+  KeyPairName:
+    Description: The name of the Key Pair created
+    Value: FrontEndEC2KeyPair
