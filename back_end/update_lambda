@@ -1,0 +1,1 @@
+aws lambda update-function-code --function-name DynamoDBInteractionFunction --s3-bucket lambda-code-bucket-021891616196-us-east-1 --s3-key lambda-code.zip
