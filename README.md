@@ -8,9 +8,6 @@ This app will be used to demo skills with React/Next.js and Node.js and AWS reso
 4. Resources will be managed using Cloudformation or Terraform
 5. CI/CD will be setup if I have time
 
-# Notes
-1. In order to update an s3 bucket using aws cli, an iam role needed to be created and the secret copied into aws configure
-
 # Progress
 1. Created the following resources using Cloudformation templates
 - VPC
@@ -26,3 +23,8 @@ This app will be used to demo skills with React/Next.js and Node.js and AWS reso
 - lambda for interacting with dynamo db tables
 2. Set up demo next.js app on ec2 instance, configured pm2 to handle running the next app, and configured nginx to route http traffic to the app
 3. Set up a demo lambda
+
+# Runbook
+1. In order to update an s3 bucket using aws cli, an iam role needed to be created and the secret copied into `aws configure`
+2. SSH key pair has to be made manually either in the console or locally and uploaded to the console, then referenced in the CFTs. Creating using the CFTs doesn't download the private key for some reason
+3. The back_end folder needs all of it's contents zipped without a top level director. I had to update `npm run package` to the following `powershell Compress-Archive -Update -Path .\\* -DestinationPath lambda-code.zip`
