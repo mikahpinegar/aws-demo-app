@@ -64,6 +64,26 @@ Resources:
         WriteCapacityUnits: 5
       BillingMode: PROVISIONED
 
+  # S3 Bucket for Lambda Code
+  LambdaCodeBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'lambda-code-bucket-${AWS::AccountId}-${AWS::Region}'
+
+  # S3 Bucket Policy for Lambda Code
+  LambdaCodeBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref LambdaCodeBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub 'arn:aws:s3:::${LambdaCodeBucket}/*'
+
 Outputs:
   UsersTableName:
     Description: "The name of the Users table"
@@ -80,3 +100,7 @@ Outputs:
   NotificationsTableName:
     Description: "The name of the Notifications table"
     Value: !Ref NotificationsTable
+
+  LambdaCodeBucketName:
+    Description: "The name of the S3 bucket for Lambda code"
+    Value: !Ref LambdaCodeBucket
