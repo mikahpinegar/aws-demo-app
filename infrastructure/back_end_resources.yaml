@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Users
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      BillingMode: PROVISIONED
+
+  HealthMetricsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: HealthMetrics
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      BillingMode: PROVISIONED
+
+  AppointmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Appointments
+      AttributeDefinitions:
+        - AttributeName: appointmentId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: appointmentId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      BillingMode: PROVISIONED
+
+  NotificationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Notifications
+      AttributeDefinitions:
+        - AttributeName: notificationId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: notificationId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      BillingMode: PROVISIONED
+
+Outputs:
+  UsersTableName:
+    Description: "The name of the Users table"
+    Value: !Ref UsersTable
+
+  HealthMetricsTableName:
+    Description: "The name of the HealthMetrics table"
+    Value: !Ref HealthMetricsTable
+
+  AppointmentsTableName:
+    Description: "The name of the Appointments table"
+    Value: !Ref AppointmentsTable
+
+  NotificationsTableName:
+    Description: "The name of the Notifications table"
+    Value: !Ref NotificationsTable
