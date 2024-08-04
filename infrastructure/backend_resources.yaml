@@ -1,10 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Parameters:
+  # Bucket where lambda code lives
   LambdaCodeBucket:
     Type: String
     Description: "LambdaCodeBucket"
 
 Resources:
+  # Users dynamo db table
   UsersTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -20,6 +22,7 @@ Resources:
         WriteCapacityUnits: 5
       BillingMode: PROVISIONED
 
+  # Health metrics dynamo db table
   HealthMetricsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -38,7 +41,8 @@ Resources:
         ReadCapacityUnits: 5
         WriteCapacityUnits: 5
       BillingMode: PROVISIONED
-
+  
+  # Appointments dynamo db table
   AppointmentsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -54,6 +58,7 @@ Resources:
         WriteCapacityUnits: 5
       BillingMode: PROVISIONED
 
+  # Notifications dynamo db table
   NotificationsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -93,11 +98,14 @@ Resources:
                   - dynamodb:UpdateItem
                   - dynamodb:Query
                   - dynamodb:Scan
+                  - dynamodb:DeleteItem
                 Resource:
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Users
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/HealthMetrics
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Appointments
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Notifications
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole  # Added CloudWatch Logs permissions
   
   # API Gateway RestApi
   ApiGatewayRestApi:
@@ -105,7 +113,7 @@ Resources:
     Properties: 
       Name: 'mikahpinegar api gateway'
 
-  # API Gateway Resource for Users
+  # API Gateway Resource for users
   UsersResource:
     Type: 'AWS::ApiGateway::Resource'
     Properties: 
@@ -114,6 +122,16 @@ Resources:
           - ApiGatewayRestApi
           - RootResourceId
       PathPart: 'users'
+      RestApiId: 
+        Ref: 'ApiGatewayRestApi'
+
+  # API Gateway Resource for /users/{userId}
+  UserIdResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties: 
+      ParentId: 
+        Ref: 'UsersResource'
+      PathPart: '{userId}'
       RestApiId: 
         Ref: 'ApiGatewayRestApi'
 
@@ -135,6 +153,60 @@ Resources:
             - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateUserLambda.Arn}/invocations
             - {}
 
+  # Method for getting a user
+  GetUserMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties: 
+      AuthorizationType: 'NONE'
+      HttpMethod: 'GET'
+      ResourceId: 
+        Ref: 'UserIdResource'
+      RestApiId: 
+        Ref: 'ApiGatewayRestApi'
+      Integration:
+        IntegrationHttpMethod: 'POST'
+        Type: 'AWS_PROXY'
+        Uri:
+          Fn::Sub: 
+            - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetUserLambda.Arn}/invocations
+            - {}
+
+  # Method for updating a user
+  UpdateUserMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties: 
+      AuthorizationType: 'NONE'
+      HttpMethod: 'PUT'
+      ResourceId: 
+        Ref: 'UserIdResource'
+      RestApiId: 
+        Ref: 'ApiGatewayRestApi'
+      Integration:
+        IntegrationHttpMethod: 'POST'
+        Type: 'AWS_PROXY'
+        Uri:
+          Fn::Sub: 
+            - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdateUserLambda.Arn}/invocations
+            - {}
+
+  # Method for deleting a user
+  DeleteUserMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties: 
+      AuthorizationType: 'NONE'
+      HttpMethod: 'DELETE'
+      ResourceId: 
+        Ref: 'UserIdResource'
+      RestApiId: 
+        Ref: 'ApiGatewayRestApi'
+      Integration:
+        IntegrationHttpMethod: 'POST'
+        Type: 'AWS_PROXY'
+        Uri:
+          Fn::Sub: 
+            - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteUserLambda.Arn}/invocations
+            - {}
+
   # Deployment
   ApiGatewayDeployment:
     Type: 'AWS::ApiGateway::Deployment'
@@ -142,7 +214,11 @@ Resources:
       RestApiId: 
         Ref: 'ApiGatewayRestApi'
       StageName: 'prod'
-    DependsOn: 'CreateUserMethod'
+    DependsOn: 
+      - CreateUserMethod
+      - GetUserMethod
+      - UpdateUserMethod
+      - DeleteUserMethod
 
   # API Gateway Custom Domain Name
   ApiGatewayDomainName:
@@ -151,6 +227,7 @@ Resources:
       DomainName: 'api.mikahpinegar.com'
       CertificateArn: 'arn:aws:acm:us-east-1:021891616196:certificate/a969aff5-df43-4cb4-bcdd-573c102f55c7'
 
+  # Base path mapping
   BasePathMapping:
     Type: 'AWS::ApiGateway::BasePathMapping'
     Properties: 
@@ -160,6 +237,7 @@ Resources:
         Ref: 'ApiGatewayRestApi'
       Stage: 'prod'
 
+  # Lambda for creating users in the user table
   CreateUserLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -174,8 +252,8 @@ Resources:
         Variables:
           USERS_TABLE: !Ref UsersTable
     
-  # Lambda Permission for API Gateway
-  LambdaInvokePermission:
+  # User lambda permission for API gateway
+  CreateLambdaInvokePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
       Action: 'lambda:InvokeFunction'
@@ -187,6 +265,7 @@ Resources:
           - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/POST/users
           - {}
 
+  # Lambda for getting user from the user table
   GetUserLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -201,6 +280,20 @@ Resources:
         Variables:
           USERS_TABLE: !Ref UsersTable
 
+  # Get user lambda permission for API gateway
+  GetLambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: 
+        Ref: 'GetUserLambda'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: 
+        Fn::Sub: 
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/GET/users/{userId}
+          - {}
+
+  # Lambda for updating user from the user table
   UpdateUserLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -215,6 +308,20 @@ Resources:
         Variables:
           USERS_TABLE: !Ref UsersTable
 
+  # Update a user lambda permission for API gateway
+  UpdateLambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: 
+        Ref: 'UpdateUserLambda'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: 
+        Fn::Sub: 
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/PUT/users/{userId}
+          - {}
+
+  # Lambda for deleting user from the user table
   DeleteUserLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -228,6 +335,19 @@ Resources:
       Environment:
         Variables:
           USERS_TABLE: !Ref UsersTable
+  
+  # Delete user lambda permission for API gateway
+  DeleteLambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: 
+        Ref: 'DeleteUserLambda'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: 
+        Fn::Sub: 
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/DELETE/users/{userId}
+          - {}
 
 Outputs:
   UsersTableName:
