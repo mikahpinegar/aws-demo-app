@@ -98,6 +98,67 @@ Resources:
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/HealthMetrics
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Appointments
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Notifications
+  
+  # API Gateway RestApi
+  ApiGatewayRestApi:
+    Type: 'AWS::ApiGateway::RestApi'
+    Properties: 
+      Name: 'mikahpinegar api gateway'
+
+  # API Gateway Resource for Users
+  UsersResource:
+    Type: 'AWS::ApiGateway::Resource'
+    Properties: 
+      ParentId: 
+        Fn::GetAtt: 
+          - ApiGatewayRestApi
+          - RootResourceId
+      PathPart: 'users'
+      RestApiId: 
+        Ref: 'ApiGatewayRestApi'
+
+  # Method for creating a user
+  CreateUserMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties: 
+      AuthorizationType: 'NONE'
+      HttpMethod: 'POST'
+      ResourceId: 
+        Ref: 'UsersResource'
+      RestApiId: 
+        Ref: 'ApiGatewayRestApi'
+      Integration:
+        IntegrationHttpMethod: 'POST'
+        Type: 'AWS_PROXY'
+        Uri:
+          Fn::Sub: 
+            - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateUserLambda.Arn}/invocations
+            - {}
+
+  # Deployment
+  ApiGatewayDeployment:
+    Type: 'AWS::ApiGateway::Deployment'
+    Properties: 
+      RestApiId: 
+        Ref: 'ApiGatewayRestApi'
+      StageName: 'prod'
+    DependsOn: 'CreateUserMethod'
+
+  # API Gateway Custom Domain Name
+  ApiGatewayDomainName:
+    Type: 'AWS::ApiGateway::DomainName'
+    Properties: 
+      DomainName: 'api.mikahpinegar.com'
+      CertificateArn: 'arn:aws:acm:us-east-1:021891616196:certificate/a969aff5-df43-4cb4-bcdd-573c102f55c7'
+
+  BasePathMapping:
+    Type: 'AWS::ApiGateway::BasePathMapping'
+    Properties: 
+      DomainName: 
+        Ref: 'ApiGatewayDomainName'
+      RestApiId: 
+        Ref: 'ApiGatewayRestApi'
+      Stage: 'prod'
 
   CreateUserLambda:
     Type: AWS::Lambda::Function
@@ -112,6 +173,19 @@ Resources:
       Environment:
         Variables:
           USERS_TABLE: !Ref UsersTable
+    
+  # Lambda Permission for API Gateway
+  LambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: 
+        Ref: 'CreateUserLambda'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: 
+        Fn::Sub: 
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/POST/users
+          - {}
 
   GetUserLambda:
     Type: AWS::Lambda::Function

@@ -54,3 +54,4 @@ This app will be used to demo skills with React/Next.js and Node.js and AWS reso
 2. SSH key pair has to be made manually either in the console or locally and uploaded to the console, then referenced in the CFTs. Creating using the CFTs doesn't download the private key for some reason
 3. The back_end folder needs all of it's contents zipped without a top level director. I had to update `npm run package` to the following `powershell Compress-Archive -Update -Path .\\* -DestinationPath lambda-code.zip`
 4. I can't create the lambdas and the s3 in the same CFT because the lambdas require a zipped code file to be present to build properly. Thus the s3_resources.yaml file must be created first
+5. after setting up the api gateway I was getting 500 internal server errors. manually invoking the api in the api gateway console showed that the gateway didn't have permissions to invoke the lambdas. adding a `AWS::Lambda::Permission` to the CFT resolved this
