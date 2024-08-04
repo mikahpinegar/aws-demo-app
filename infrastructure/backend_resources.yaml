@@ -3,11 +3,72 @@ Parameters:
   LambdaCodeBucket:
     Type: String
     Description: "LambdaCodeBucket"
-  LambdaCodeKey:
-    Type: String
-    Description: "S3 key for the Lambda function code zip file"
 
 Resources:
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Users
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      BillingMode: PROVISIONED
+
+  HealthMetricsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: HealthMetrics
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: timestamp
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: timestamp
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      BillingMode: PROVISIONED
+
+  AppointmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Appointments
+      AttributeDefinitions:
+        - AttributeName: appointmentId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: appointmentId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      BillingMode: PROVISIONED
+
+  NotificationsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Notifications
+      AttributeDefinitions:
+        - AttributeName: notificationId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: notificationId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+      BillingMode: PROVISIONED
+  
   # IAM Role for Lambda Function
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -38,25 +99,75 @@ Resources:
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Appointments
                   - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Notifications
 
-  # Lambda Function
-  LambdaFunction:
+  CreateUserLambda:
     Type: AWS::Lambda::Function
     Properties:
-      FunctionName: DynamoDBInteractionFunction
-      Handler: index.handler
+      FunctionName: CreateUserLambda
+      Handler: src/handlers/users/createUser.handler
       Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs18.x
       Code:
         S3Bucket: !Ref LambdaCodeBucket
-        S3Key: !Ref LambdaCodeKey
+        S3Key: lambda-code.zip
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+
+  GetUserLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: GetUserLambda
+      Handler: src/handlers/users/getUser.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
       Runtime: nodejs18.x
-      MemorySize: 128
-      Timeout: 30
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: lambda-code.zip
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+
+  UpdateUserLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: UpdateUserLambda
+      Handler: src/handlers/users/updateUser.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs18.x
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: lambda-code.zip
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+
+  DeleteUserLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: DeleteUserLambda
+      Handler: src/handlers/users/deleteUser.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs18.x
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: lambda-code.zip
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
 
 Outputs:
-  LambdaFunctionName:
-    Description: "The name of the Lambda function"
-    Value: !Ref LambdaFunction
+  UsersTableName:
+    Description: "The name of the Users table"
+    Value: !Ref UsersTable
 
-  LambdaExecutionRoleArn:
-    Description: "The ARN of the Lambda execution role"
-    Value: !GetAtt LambdaExecutionRole.Arn
+  HealthMetricsTableName:
+    Description: "The name of the HealthMetrics table"
+    Value: !Ref HealthMetricsTable
+
+  AppointmentsTableName:
+    Description: "The name of the Appointments table"
+    Value: !Ref AppointmentsTable
+
+  NotificationsTableName:
+    Description: "The name of the Notifications table"
+    Value: !Ref NotificationsTable

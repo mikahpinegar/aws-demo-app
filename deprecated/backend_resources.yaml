@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  LambdaCodeBucket:
+    Type: String
+    Description: "LambdaCodeBucket"
+  LambdaCodeKey:
+    Type: String
+    Description: "S3 key for the Lambda function code zip file"
+
+Resources:
+  # IAM Role for Lambda Function
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LambdaDynamoDBExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaDynamoDBPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                Resource:
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Users
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/HealthMetrics
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Appointments
+                  - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/Notifications
+
+  # Lambda Function
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: DynamoDBInteractionFunction
+      Handler: index.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Runtime: nodejs18.x
+      MemorySize: 128
+      Timeout: 30
+
+Outputs:
+  LambdaFunctionName:
+    Description: "The name of the Lambda function"
+    Value: !Ref LambdaFunction
+
+  LambdaExecutionRoleArn:
+    Description: "The ARN of the Lambda execution role"
+    Value: !GetAtt LambdaExecutionRole.Arn
