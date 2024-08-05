@@ -1,12 +1,13 @@
 # aws-demo-app
-This app will be used to demo skills with React/Next.js and Node.js and AWS resources like Lambdas, EC2, and Dynamo DB
+This app will be used to demo skills with React/Next.js front end with Node.js + AWS backend with resources like Lambdas, EC2, and Dynamo DB
 
 # Architecture
 1. A React app built with Next.js hosted on an EC2 instance with PM2 + nginx
 2. A Node.js + Lambda backend
-3. Most likely a DynamoDB database for simplicity
-4. Resources will be managed using Cloudformation or Terraform
-5. CI/CD will be setup if I have time
+3. An API gateway to handle routing API calls to Lambdas
+4. Most likely a DynamoDB database for simplicity
+5. Resources will be managed using Cloudformation
+6. CI/CD will be setup if I have time (I did not)
 
 # Table structure 
 
@@ -42,20 +43,48 @@ This app will be used to demo skills with React/Next.js and Node.js and AWS reso
 - Security group
 - EC2 Instance
 - s3 bucket for storing lambda code
-- s3 bucket policy to allow access for lambda
-- several dynamo db tables
-- iam role for lambda to access dynamo db tables
-- lambda for interacting with dynamo db tables
-2. Set up demo next.js app on ec2 instance, configured pm2 to handle running the next app, and configured nginx to route http traffic to the app
+- s3 bucket policy to allow lambdas access
+- Several dynamo db tables
+- IAM role for lambda to access dynamo db tables, allow invocation by the API gateway, and access to cloudwatch
+- Several Lambdas for interacting with the dynamo db tables. I ran out of time and only got to use one table (Users)
+- An API Gateway with several resources and methods
+2. Set up a demo next.js app for interacting with the Users table on an ec2 instance, configured pm2 to handle running the next app, and configured nginx to route http traffic to the app
 3. Set up demo CRUD lambdas for the users table
 4. Set up an API gateway to route traffic to the lambdas
-5. configured cloudflare to route traffic from api.mikahpinegar.com to the api gateway
+5. A custom domain hosted in cloudflare (mikahpinegar.com) that forwards to the API gateway using a cname. api.mikahpinegar.com -> API Gateway
+
+# Things I was planning on doing but didn't have time for
+1. Setting up CI/CD for deploying my lambdas on commit to main
+2. Setting up CI/CD for deploying my front end to EC2 on commit to main
+3. More code cleanup, logging, linting, and testing of the back end
+4. More code cleanup, linting, and testing of the front end
+5. Utilizing all of the tables I created. I wanted to make a portal for creating users, entering in health metrics (like weight, blood pressure, etc), and scheduling appointments. That was a bit of a lofty goal to get done in a weekend. I would need a few more days to complete the whole vision. This would involve several steps
+- Writing CRUD lambdas for the other tables
+- Updating CFTs to crate new lambdas and handle API Gateway routing
+- Update front end to handle creating users, entering metrics, and making appointments
+
 
 # Runbook
-1. In order to update an s3 bucket using aws cli, an iam role needed to be created and the secret copied into `aws configure`
-2. SSH key pair has to be made manually either in the console or locally and uploaded to the console, then referenced in the CFTs. Creating using the CFTs doesn't download the private key for some reason
-3. The back_end folder needs all of it's contents zipped without a top level director. I had to update `npm run package` to the following `powershell Compress-Archive -Update -Path .\\* -DestinationPath lambda-code.zip`
-4. I can't create the lambdas and the s3 in the same CFT because the lambdas require a zipped code file to be present to build properly. Thus the s3_resources.yaml file must be created first
-5. after setting up the api gateway I was getting 500 internal server errors. manually invoking the api in the api gateway console showed that the gateway didn't have permissions to invoke the lambdas. adding a `AWS::Lambda::Permission` to the CFT resolved this
-6. no cloudwatch logs -> added ManagedPolicyArns to the iam role for the lambdas
-7. lambdas not updating -> configure the script to actually update all of your lambdas and not just one!
+**Symptom** Can't update s3 buckt from the CLI
+**Solution** Create iam role with the needed privs and copy the secret into the cli using `aws configure`
+
+**Symptom** Can't access SSH private key after creating using cloudformation
+**Solution** Cloudformation won't allow you to output a private key. Make or import it manually in the AWS console and then reference it in the CFT
+
+**Symptom** Script for zipping lambdas folder is adding an extra top level directory
+**Solution** Update `npm run package` to the following: `powershell Compress-Archive -Update -Path .\\* -DestinationPath lambda-code.zip`
+
+**Symptom** Can't create lambdas and s3 bucket in the same CFT because the s3 bucket doesn't have the zipped lambda code
+**Solution** Create s3_resources.yaml, build it first, and upload zipped lambda code before running backend_resources.yaml
+
+**Symptom** API Gateway is returning status code 500, logs show it doens't have permissions to invoke lambdas
+**Solution** Add a `AWS::Lambda::Permission` to the CFT that gives the API Gateway permissions to invoke each lambda
+
+**Symptom** No cloudwatch logs are present for lambdas
+**Solution** Add ManagedPolicyArns to the IAM role for the lambdas
+
+**Symptom** Lambdas not updating via your script
+**Solution** Configure the script to actually update all of your lambdas and not just one!
+
+**Symptom** API Gateway endpoints return CORS errors
+**Solution** Add an options method to each resource that configures the `Access-Control-Allow-Origin: '*'` header to be included in preflight and also manually add the `Access-Control-Allow-Origin: '*'` header to all lambda responses. Both steps are needed to resolve this issue
