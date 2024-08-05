@@ -1,1 +1,1 @@
-export const apiUrl = 'https://api.mikahpinegar.com'
+export const apiUrl = 'https://api.mikahpinegar.com';

@@ -1,4 +1,5 @@
 // pages/users.js
+import React from 'react';
 import UserTabs from '../components/UserTabs';
 import { Container, Title } from '../styles/commonStyles';
 

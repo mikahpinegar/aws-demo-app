@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { updateUser } from '../utils/response';
-import { Container, Title, Form, FormGroup, Label, Input, Button, Message } from '../styles/commonStyles';
+import {
+  Container, Title, Form, FormGroup, Label, Input, Button, Message,
+} from '../styles/commonStyles';
 
 const UpdateUser = () => {
   const [userId, setUserId] = useState('');

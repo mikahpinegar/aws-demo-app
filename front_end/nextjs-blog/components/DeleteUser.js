@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Container, Title, Form, Input, Button, Message } from '../styles/commonStyles';
+import React, { useState } from 'react';
+import {
+  Container, Title, Form, Input, Button, Message,
+} from '../styles/commonStyles';
 import { deleteUser } from '../utils/response';
 
 const DeleteUser = () => {

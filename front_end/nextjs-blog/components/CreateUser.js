@@ -9,7 +9,7 @@ import {
   Button,
   ResponseContainer,
   ResponseTitle,
-  Pre
+  Pre,
 } from '../styles/commonStyles';
 import { createUser } from '../utils/response';
 
@@ -24,8 +24,10 @@ const CreateUser = () => {
     e.preventDefault();
 
     try {
-      createUser({ userId, name, email, role }).then((response) => {
-        console.log(response)
+      createUser({
+        userId, name, email, role,
+      }).then((response) => {
+        console.log(response);
         setResponse(response?.message);
       });
     } catch (error) {
