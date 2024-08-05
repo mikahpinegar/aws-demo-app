@@ -1,6 +1,6 @@
-// components/UpdateUser.js
 import { useState } from 'react';
 import { updateUser } from '../utils/response';
+import { Container, Title, Form, FormGroup, Label, Input, Button, Message } from '../styles/commonStyles';
 
 const UpdateUser = () => {
   const [userId, setUserId] = useState('');
@@ -15,24 +15,63 @@ const UpdateUser = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      updateUser(userId, user).then((response) => setMessage('User updated successfully!'))
+      updateUser(userId, user).then((response) => setMessage('User updated successfully!'));
     } catch (error) {
       setMessage('Error updating user.');
     }
   };
 
   return (
-    <div>
-      <h2>Update User</h2>
-      <input type="text" placeholder="User ID" value={userId} onChange={(e) => setUserId(e.target.value)} />
-      <form onSubmit={handleSubmit}>
-        <input type="text" name="name" placeholder="Name" value={user.name} onChange={handleChange} />
-        <input type="email" name="email" placeholder="Email" value={user.email} onChange={handleChange} />
-        <input type="text" name="role" placeholder="Role" value={user.role} onChange={handleChange} />
-        <button type="submit">Update</button>
-      </form>
-      <p>{message}</p>
-    </div>
+    <Container>
+      <Title>Update User</Title>
+      <Form onSubmit={handleSubmit}>
+        <FormGroup>
+          <Label>User ID:</Label>
+          <Input
+            type="text"
+            placeholder="User ID"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            required
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label>Name:</Label>
+          <Input
+            type="text"
+            name="name"
+            placeholder="Name"
+            value={user.name}
+            onChange={handleChange}
+            required
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label>Email:</Label>
+          <Input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={user.email}
+            onChange={handleChange}
+            required
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label>Role:</Label>
+          <Input
+            type="text"
+            name="role"
+            placeholder="Role"
+            value={user.role}
+            onChange={handleChange}
+            required
+          />
+        </FormGroup>
+        <Button type="submit">Update</Button>
+      </Form>
+      {message && <Message error={message.includes('Error')}>{message}</Message>}
+    </Container>
   );
 };
 

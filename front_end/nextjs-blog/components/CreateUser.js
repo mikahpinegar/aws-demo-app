@@ -1,4 +1,16 @@
 import React, { useState } from 'react';
+import {
+  Container,
+  Title,
+  Form,
+  FormGroup,
+  Label,
+  Input,
+  Button,
+  ResponseContainer,
+  ResponseTitle,
+  Pre
+} from '../styles/commonStyles';
 import { createUser } from '../utils/response';
 
 const CreateUser = () => {
@@ -15,70 +27,61 @@ const CreateUser = () => {
       createUser({ userId, name, email, role }).then((response) => {
         console.log(response)
         setResponse(response?.message);
-      })
-      
+      });
     } catch (error) {
       setResponse({ error: 'An error occurred' });
     }
   };
 
   return (
-    <div>
-      <h1>Create User</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>
-            User ID:
-            <input
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Name:
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Email:
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </label>
-        </div>
-        <div>
-          <label>
-            Role:
-            <input
-              type="text"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              required
-            />
-          </label>
-        </div>
-        <button type="submit">Create User</button>
-      </form>
+    <Container>
+      <Title>Create User</Title>
+      <Form onSubmit={handleSubmit}>
+        <FormGroup>
+          <Label>User ID:</Label>
+          <Input
+            type="text"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+            required
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label>Name:</Label>
+          <Input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label>Email:</Label>
+          <Input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </FormGroup>
+        <FormGroup>
+          <Label>Role:</Label>
+          <Input
+            type="text"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            required
+          />
+        </FormGroup>
+        <Button type="submit">Create User</Button>
+      </Form>
       {response && (
-        <div>
-          <h2>Response</h2>
-          <pre>{JSON.stringify(response, null, 2)}</pre>
-        </div>
+        <ResponseContainer>
+          <ResponseTitle>Response</ResponseTitle>
+          <Pre>{JSON.stringify(response, null, 2)}</Pre>
+        </ResponseContainer>
       )}
-    </div>
+    </Container>
   );
 };
 

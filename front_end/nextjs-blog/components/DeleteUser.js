@@ -1,5 +1,5 @@
-// components/DeleteUser.js
 import { useState } from 'react';
+import { Container, Title, Form, Input, Button, Message } from '../styles/commonStyles';
 import { deleteUser } from '../utils/response';
 
 const DeleteUser = () => {
@@ -17,14 +17,20 @@ const DeleteUser = () => {
   };
 
   return (
-    <div>
-      <h2>Delete User</h2>
-      <form onSubmit={handleSubmit}>
-        <input type="text" placeholder="User ID" value={userId} onChange={(e) => setUserId(e.target.value)} />
-        <button type="submit">Delete</button>
-      </form>
-      <p>{message}</p>
-    </div>
+    <Container>
+      <Title>Delete User</Title>
+      <Form onSubmit={handleSubmit}>
+        <Input
+          type="text"
+          placeholder="User ID"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+          required
+        />
+        <Button type="submit">Delete</Button>
+      </Form>
+      {message && <Message error={message.includes('Error')}>{message}</Message>}
+    </Container>
   );
 };
 
