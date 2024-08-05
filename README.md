@@ -5,7 +5,7 @@ This app will be used to demo skills with React/Next.js front end with Node.js +
 1. A React app built with Next.js hosted on an EC2 instance with PM2 + nginx
 2. A Node.js + Lambda backend
 3. An API gateway to handle routing API calls to Lambdas
-4. Most likely a DynamoDB database for simplicity
+4. DynamoDB database for simplicity
 5. Resources will be managed using Cloudformation
 6. CI/CD will be setup if I have time (I did not)
 
