@@ -69,30 +69,37 @@ This app will be used to demo skills with React/Next.js front end with Node.js +
 **Symptom** Can't update s3 buckt from the CLI
 
 **Solution** Create iam role with the needed privs and copy the secret into the cli using `aws configure`
+
 ---
 **Symptom** Can't access SSH private key after creating using cloudformation
 
 **Solution** Cloudformation won't allow you to output a private key. Make or import it manually in the AWS console and then reference it in the CFT
+
 ---
 **Symptom** Script for zipping lambdas folder is adding an extra top level directory
 
 **Solution** Update `npm run package` to the following: `powershell Compress-Archive -Update -Path .\\* -DestinationPath lambda-code.zip`
+
 ---
 **Symptom** Can't create lambdas and s3 bucket in the same CFT because the s3 bucket doesn't have the zipped lambda code
 
 **Solution** Create s3_resources.yaml, build it first, and upload zipped lambda code before running backend_resources.yaml
+
 ---
 **Symptom** API Gateway is returning status code 500, logs show it doens't have permissions to invoke lambdas
 
 **Solution** Add a `AWS::Lambda::Permission` to the CFT that gives the API Gateway permissions to invoke each lambda
+
 ---
 **Symptom** No cloudwatch logs are present for lambdas
 
 **Solution** Add ManagedPolicyArns to the IAM role for the lambdas
+
 ---
 **Symptom** Lambdas not updating via your script
 
 **Solution** Configure the script to actually update all of your lambdas and not just one!
+
 ---
 **Symptom** API Gateway endpoints return CORS errors
 
