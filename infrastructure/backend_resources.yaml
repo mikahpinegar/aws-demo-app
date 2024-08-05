@@ -153,6 +153,24 @@ Resources:
             - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateUserLambda.Arn}/invocations
             - {}
 
+  # Method for getting all users
+  GetUsersMethod:
+    Type: 'AWS::ApiGateway::Method'
+    Properties: 
+      AuthorizationType: 'NONE'
+      HttpMethod: 'GET'
+      ResourceId: 
+        Ref: 'UsersResource'
+      RestApiId: 
+        Ref: 'ApiGatewayRestApi'
+      Integration:
+        IntegrationHttpMethod: 'POST'
+        Type: 'AWS_PROXY'
+        Uri:
+          Fn::Sub: 
+            - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetUsersLambda.Arn}/invocations
+            - {}
+
   # Method for getting a user
   GetUserMethod:
     Type: 'AWS::ApiGateway::Method'
@@ -347,6 +365,34 @@ Resources:
       SourceArn: 
         Fn::Sub: 
           - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/DELETE/users/{userId}
+          - {}
+
+  # Lambda for getting all users in the user table
+  GetUsersLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: GetUsersLambda
+      Handler: src/handlers/users/getUsers.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Runtime: nodejs18.x
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: lambda-code.zip
+      Environment:
+        Variables:
+          USERS_TABLE: !Ref UsersTable
+    
+  # Get users lambda permission for API gateway
+  CreateLambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: 
+        Ref: 'GetUsersLambda'
+      Principal: 'apigateway.amazonaws.com'
+      SourceArn: 
+        Fn::Sub: 
+          - arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/GET/users
           - {}
 
 Outputs:

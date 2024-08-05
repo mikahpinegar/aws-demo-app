@@ -47,7 +47,9 @@ This app will be used to demo skills with React/Next.js and Node.js and AWS reso
 - iam role for lambda to access dynamo db tables
 - lambda for interacting with dynamo db tables
 2. Set up demo next.js app on ec2 instance, configured pm2 to handle running the next app, and configured nginx to route http traffic to the app
-3. Set up a demo lambda
+3. Set up demo CRUD lambdas for the users table
+4. Set up an API gateway to route traffic to the lambdas
+5. configured cloudflare to route traffic from api.mikahpinegar.com to the api gateway
 
 # Runbook
 1. In order to update an s3 bucket using aws cli, an iam role needed to be created and the secret copied into `aws configure`
@@ -56,3 +58,4 @@ This app will be used to demo skills with React/Next.js and Node.js and AWS reso
 4. I can't create the lambdas and the s3 in the same CFT because the lambdas require a zipped code file to be present to build properly. Thus the s3_resources.yaml file must be created first
 5. after setting up the api gateway I was getting 500 internal server errors. manually invoking the api in the api gateway console showed that the gateway didn't have permissions to invoke the lambdas. adding a `AWS::Lambda::Permission` to the CFT resolved this
 6. no cloudwatch logs -> added ManagedPolicyArns to the iam role for the lambdas
+7. lambdas not updating -> configure the script to actually update all of your lambdas and not just one!
