@@ -1,7 +1,6 @@
 // components/UpdateUser.js
 import { useState } from 'react';
-import axios from 'axios';
-import { apiUrl } from '../utils/constants';
+import { updateUser } from '../utils/response';
 
 const UpdateUser = () => {
   const [userId, setUserId] = useState('');
@@ -16,8 +15,7 @@ const UpdateUser = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.put(`${apiUrl}/api/users/${userId}`, user);
-      setMessage('User updated successfully!');
+      updateUser(userId, user).then((response) => setMessage('User updated successfully!'))
     } catch (error) {
       setMessage('Error updating user.');
     }

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createUser } from '../utils/response';
 
 const CreateUser = () => {
   const [userId, setUserId] = useState('');
@@ -11,15 +12,11 @@ const CreateUser = () => {
     e.preventDefault();
 
     try {
-      const res = await fetch('https://api.mikahpinegar.com/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId, name, email, role }),
-      });
-      const data = await res.json();
-      setResponse(data);
+      createUser({ userId, name, email, role }).then((response) => {
+        console.log(response)
+        setResponse(response?.message);
+      })
+      
     } catch (error) {
       setResponse({ error: 'An error occurred' });
     }

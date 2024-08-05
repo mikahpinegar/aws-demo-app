@@ -1,6 +1,5 @@
 // components/GetUsers.js
 import { useEffect, useState } from 'react';
-import axios from 'axios';
 import { getUsers } from '../utils/response';
 
 const GetUsers = () => {
@@ -10,9 +9,7 @@ const GetUsers = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        // const response = await axios.get(apiUrl + '/api/users');
         getUsers().then((response) => {
-            console.log(response)
             setUsers(Object.values(response))
         });
       } catch (error) {

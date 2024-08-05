@@ -1,5 +1,3 @@
-import { apiUrl } from "./constants";
-
 export const createResponse = (statusCode, body) => {
     return {
         statusCode,
@@ -26,8 +24,8 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
         const response = await fetch(url, options);
 
         if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'An error occurred');
+            const error = await response.json();
+            throw new Error(error.message || 'An error occurred');
         }
 
         return await response.json();

@@ -1,8 +1,6 @@
 // components/DeleteUser.js
 import { useState } from 'react';
-import axios from 'axios';
-import { apiUrl } from '../utils/constants';
-
+import { deleteUser } from '../utils/response';
 
 const DeleteUser = () => {
   const [userId, setUserId] = useState('');
@@ -11,7 +9,7 @@ const DeleteUser = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.delete(`${apiUrl}/api/users/${userId}`);
+      deleteUser(userId).then((response) => console.log(response));
       setMessage('User deleted successfully!');
     } catch (error) {
       setMessage('Error deleting user.');
