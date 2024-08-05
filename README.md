@@ -48,10 +48,11 @@ This app will be used to demo skills with React/Next.js front end with Node.js +
 - IAM role for lambda to access dynamo db tables, allow invocation by the API gateway, and access to cloudwatch
 - Several Lambdas for interacting with the dynamo db tables. I ran out of time and only got to use one table (Users)
 - An API Gateway with several resources and methods
-2. Set up a demo next.js app for interacting with the Users table on an ec2 instance, configured pm2 to handle running the next app, and configured nginx to route http traffic to the app
+2. Set up a demo next.js app for interacting with the Users table on an ec2 instance, configured pm2 to handle running the next app
 3. Set up demo CRUD lambdas for the users table
 4. Set up an API gateway to route traffic to the lambdas
 5. A custom domain hosted in cloudflare (mikahpinegar.com) that forwards to the API gateway using a cname. api.mikahpinegar.com -> API Gateway
+6. Set up nginx to handle routing mikahpinegar.com to the EC2 instance running the front end. Configured full strict SSL in cloudflare and copied over the origin SSL cert to the EC2 instance
 
 # Things I was planning on doing but didn't have time for
 1. Setting up CI/CD for deploying my lambdas on commit to main
